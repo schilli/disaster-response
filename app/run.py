@@ -1,36 +1,67 @@
+import sys
 import json
 import plotly
 import pandas as pd
 
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+import joblib
 from sqlalchemy import create_engine
 
+import re
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
+
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet') # download for lemmatization
 
 app = Flask(__name__)
 
-def tokenize(text):
-    tokens = word_tokenize(text)
-    lemmatizer = WordNetLemmatizer()
 
-    clean_tokens = []
-    for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
-        clean_tokens.append(clean_tok)
+def tokenize(text):
+    """Tokenize the provided text by
+            * removing punctuation
+            * tokenizing into words
+            * removing stopwords
+            * lemmatizing, including conversion to lowercase
+        """
+
+    # remove punctuation
+    text = re.sub(r"[^a-zA-Z0-9]", " ", text)
+
+    # tokenize into words
+    tokens = word_tokenize(text)
+
+    # remove stopwords
+    tokens = [t for t in tokens if t not in stopwords.words("english")]
+
+    # lemmatize, including conversion to lowercase
+    lemmatizer = WordNetLemmatizer()
+    clean_tokens = [lemmatizer.lemmatize(tok).lower().strip() for tok in tokens]
 
     return clean_tokens
 
+
+if len(sys.argv) == 3:
+    database_filepath, model_filepath = sys.argv[1:]
+else:
+    print('Please provide the filepath of the disaster messages database ' \
+          'as the first argument and the filepath of the pickled model file' \
+          'as the second argument. \n\nExample: python ' \
+          'run.py ../data/DisasterResponse.db classifier.pkl')
+    sys.exit(1)
+
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine(f'sqlite:///{database_filepath}')
+df = pd.read_sql_table('messages', engine)
+
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load(model_filepath)
 
 
 # index webpage displays cool visuals and receives user input text for model
