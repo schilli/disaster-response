@@ -1,13 +1,7 @@
 import sys
-import re
 import pandas as pd
 import pickle
 from sqlalchemy import create_engine
-
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem.wordnet import WordNetLemmatizer
 
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
@@ -17,6 +11,12 @@ from sklearn.pipeline import Pipeline
 
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
+
+import re
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.wordnet import WordNetLemmatizer
 
 nltk.download('punkt')
 nltk.download('stopwords')
