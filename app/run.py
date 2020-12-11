@@ -1,6 +1,7 @@
 import sys
 import json
 import plotly
+import numpy as np
 import pandas as pd
 
 from flask import Flask
@@ -64,19 +65,87 @@ df = pd.read_sql_table('messages', engine)
 model = joblib.load(model_filepath)
 
 
+def largest_correlations(df, correlation_threshold=0.3):
+    """
+    Look for positive and negative correlation with magnitude > correlation_threshold
+    :param df: DataFrame with messages and categories, binary encoded
+    :param correlation_threshold: threshold above which absolute correlation magnitudes are considered
+    :return: DataFrame with categories and largest correlation values
+    """
+    corr = df.iloc[:, 4:].corr()
+
+    # set diagnonal to non
+    np.fill_diagonal(corr.values, np.nan)
+
+    # set upper triangular matrix to 0 (symmetric matrix)
+    corr *= np.tri(*corr.shape)
+
+    corrabs = corr.abs()
+    categories1, categories2 = np.where(corrabs > correlation_threshold)
+    categories1 = corr.index[categories1]
+    categories2 = corr.columns[categories2]
+
+    correlation_values = [corr.loc[cat1, cat2] for cat1, cat2 in zip(categories1, categories2)]
+
+    correlations = pd.DataFrame([categories1, categories2, correlation_values],
+                                index=["category1", "category2", "correlation"]).T
+    correlations.sort_values("correlation", ascending=False, inplace=True)
+    correlations.reset_index(drop=True, inplace=True)
+
+    return correlations
+
+
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+    category_counts = df.iloc[:, 4:].sum(0).sort_values(ascending=False)
+    correlations = largest_correlations(df, correlation_threshold=0.3)
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
+        {
+            'data': [
+                Bar(
+                    x=category_counts.index,
+                    y=category_counts.values
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+
+        {
+            'data': [
+                Bar(
+                    x=correlations['category1'] + ' & ' + correlations['category2'],
+                    y=correlations['correlation']
+                )
+            ],
+
+            'layout': {
+                'title': 'Largest Category Correlations',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category Combination"
+                }
+            }
+        },
+
         {
             'data': [
                 Bar(
