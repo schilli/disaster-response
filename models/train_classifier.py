@@ -90,7 +90,7 @@ def grid_search(model):
     # Score by f1 score for a balanced model between precision and recall
     f1_weighted_score = make_scorer(f1_score, average='weighted', zero_division=0)
 
-    cv = GridSearchCV(model, param_grid=parameters, scoring=f1_weighted_score, n_jobs=1, cv=2, verbose=5)
+    cv = GridSearchCV(model, param_grid=parameters, scoring=f1_weighted_score, n_jobs=1, cv=2)
     return cv
 
 
