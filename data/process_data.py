@@ -56,6 +56,9 @@ def clean_data(messages, categories):
         # convert column from string to numeric
         categories[column] = categories[column].astype(int)
 
+    # the 'related' category has a few values of 2. set them to the mode of 'related'
+    categories.loc[categories["related"] == 2, "related"] = categories["related"].mode().iloc[0]
+
     # merge messages and categories (inner merge with one-to-one validation to ensure there are categories for each message)
     df = pd.merge(messages, categories, how="left", left_index=True, right_index=True, validate='one_to_one')
 

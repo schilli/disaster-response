@@ -72,9 +72,9 @@ def largest_correlations(df, correlation_threshold=0.3):
     :param correlation_threshold: threshold above which absolute correlation magnitudes are considered
     :return: DataFrame with categories and largest correlation values
     """
-    corr = df.iloc[:, 4:].corr()
+    corr = df.iloc[:, 3:].corr()
 
-    # set diagnonal to non
+    # set diagnonal to nan
     np.fill_diagonal(corr.values, np.nan)
 
     # set upper triangular matrix to 0 (symmetric matrix)

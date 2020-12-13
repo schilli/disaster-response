@@ -33,7 +33,7 @@ def load_data(database_filepath):
     engine = create_engine(f'sqlite:///{database_filepath}')
     df = pd.read_sql('messages', con=engine)
     X = df[['message']]
-    Y = df.iloc[:, 4:]
+    Y = df.iloc[:, 3:]
     categoriy_names = Y.columns
     return X, Y, categoriy_names
 
